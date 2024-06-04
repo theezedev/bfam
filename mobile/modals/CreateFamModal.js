@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Platform, PanResponder } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import globals from '../globals';
+import AppContext from '../AppContext';
+
 const CreateFamModal = ({ visible, onClose, onCreateFam }) => {
   const [famName, setFamName] = useState('');
-  // const [code, setCode] = useState('');
-
-  const handleJoin = () => {
-    if (code.length === 36) {
-      onCreateFam(code);
-      onClose(); // Close the modal
-    } else {
-      //not 36 characters.
-      alert("That code doesn't seem correct. Can you try again?");
-    }
-  };
+  const { userID, setUserID, } = useContext(AppContext);
 
   const closeModal = () => {
     onClose();
@@ -35,6 +28,43 @@ const CreateFamModal = ({ visible, onClose, onCreateFam }) => {
       },
     })
   ).current;
+
+  const postNewBFam = async () => {
+
+    if (!famName || famName.trim().length === 0) {
+      alert('Family name cannot be blank!');
+      return;
+    }
+
+    try {
+      const data = {
+        userID: userID,
+        bfamName: famName,
+        isDefault: 1,
+      };
+  
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // Set the content type to JSON
+          // Add other necessary headers like authorization if needed
+        },
+        body: JSON.stringify(data), // Convert JavaScript object to JSON string
+      };
+  
+      const response = await fetch(`${globals.apiURL}postNewBFam`, requestOptions);
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const responseData = await response.json(); // Parse the response data
+      console.log(responseData); // Handle the response data here
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
 
   return (
     <Modal
@@ -60,7 +90,7 @@ const CreateFamModal = ({ visible, onClose, onCreateFam }) => {
                 />
               </View>
               <View style={{ marginBottom: '10%', padding:20, }}>
-                <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
+                <TouchableOpacity style={styles.joinButton} onPress={postNewBFam}>
                   <Text style={styles.buttonText}>Create</Text>
                 </TouchableOpacity>
               </View>
@@ -82,7 +112,7 @@ const styles = StyleSheet.create({
     // padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    height: '70%',
+    height: '80%',
     borderWidth: 1,
     borderColor: '#CCCCCC',
     ...Platform.select({
@@ -115,7 +145,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: 'black',
+    borderColor: '#CCCCCC',
     borderRadius: 5,
     padding: 10,
     marginVertical: 10,

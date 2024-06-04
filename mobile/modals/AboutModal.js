@@ -1,22 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Platform, PanResponder, } from 'react-native';
+import { Modal, View, Text, FlatList, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Platform, PanResponder, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
 
-const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
-  const [code, setCode] = useState('');
-  const [checked, setChecked] = useState(false);
-
-
-  const handleJoin = () => {
-    if (code.length === 36) {
-      onJoinFam(code);
-      onClose(); // Close the modal
-    } else {
-      //not 36 characters.
-      alert("That code doesn't seem correct. Can you try again?");
-    }
-  };
+const AboutModal = ({ visible, onClose, onCreateFam }) => {
+  // const [famName, setFamName] = useState('');
 
   const closeModal = () => {
     onClose();
@@ -38,6 +25,27 @@ const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
     })
   ).current;
 
+  const externalSources = [
+    { id: 1, name: 'Illustration by Julia G', url: 'https://icons8.com/illustrations/author/627444'},
+    // { id: 2, name: 'Source 2', url: 'https://www.source2.com' },
+    // { id: 3, name: 'Source 3', url: 'https://www.source3.com' },
+    // Add more sources as needed
+  ];
+
+  const renderExternalSource = ({ item }) => {
+    const handlePress = () => {
+      // Open the URL in the device's default browser
+      Linking.openURL(item.url);
+    };
+
+    return (
+      <TouchableOpacity onPress={handlePress}>
+        <View style={{ padding: 10 }}>
+          <Text>{item.name}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <Modal
@@ -51,22 +59,24 @@ const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
           <TouchableWithoutFeedback>
             <View style={styles.modalContainer} {...panResponder.panHandlers}>
               <View style={styles.modalTitle}>
-                <Text style={styles.modalTitleText}>JOIN A FAMILY</Text>
+                <Text style={styles.modalTitleText}>About</Text>
               </View>
-              <View style={{ flex: 1, justifyContent: 'center', padding:20, }}>
-                <Text>Enter your family code:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="Enter code"
-                />
+              <View style={{ flex: 1, justifyContent: 'flex-start', padding:20, }}>
+                <View style={styles.inputSection}>
+                    <Text style={styles.inputLabel}>Info:</Text>
+                    
+                </View>
+                <View>
+                  <Text style={styles.inputLabel}>Attribution:</Text>
+                  <FlatList
+                    data={externalSources}
+                    renderItem={renderExternalSource}
+                    keyExtractor={(item) => item.id.toString()}
+                  />
+                </View>
               </View>
-              
               <View style={{ marginBottom: '10%', padding:20, }}>
-                <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
-                  <Text style={styles.buttonText}>Join</Text>
-                </TouchableOpacity>
+                
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -117,9 +127,21 @@ const styles = StyleSheet.create({
     textAlign:'center',
     fontSize:20,
   },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 5,
+  },
+  inputSection:{
+    marginBottom:10,
+  },
+  inputLabel:{
+    fontWeight:'bold',
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#CCCCCC',
+    borderColor: 'black',
     borderRadius: 5,
     padding: 10,
     marginVertical: 10,
@@ -148,4 +170,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JoinFamModal;
+export default AboutModal;

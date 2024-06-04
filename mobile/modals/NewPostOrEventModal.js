@@ -1,22 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Platform, PanResponder, } from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, TouchableWithoutFeedback, Platform, PanResponder } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
 
-const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
-  const [code, setCode] = useState('');
-  const [checked, setChecked] = useState(false);
-
-
-  const handleJoin = () => {
-    if (code.length === 36) {
-      onJoinFam(code);
-      onClose(); // Close the modal
-    } else {
-      //not 36 characters.
-      alert("That code doesn't seem correct. Can you try again?");
-    }
-  };
+const NewPostOrEventModal = ({ visible, onClose, navigation }) => {
 
   const closeModal = () => {
     onClose();
@@ -38,7 +24,6 @@ const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
     })
   ).current;
 
-
   return (
     <Modal
       animationType="slide"
@@ -51,21 +36,15 @@ const JoinFamModal = ({ visible, onClose, onJoinFam }) => {
           <TouchableWithoutFeedback>
             <View style={styles.modalContainer} {...panResponder.panHandlers}>
               <View style={styles.modalTitle}>
-                <Text style={styles.modalTitleText}>JOIN A FAMILY</Text>
+                <Text style={styles.modalTitleText}>NEW</Text>
               </View>
-              <View style={{ flex: 1, justifyContent: 'center', padding:20, }}>
-                <Text>Enter your family code:</Text>
-                <TextInput
-                  style={styles.input}
-                  value={code}
-                  onChangeText={setCode}
-                  placeholder="Enter code"
-                />
-              </View>
-              
-              <View style={{ marginBottom: '10%', padding:20, }}>
-                <TouchableOpacity style={styles.joinButton} onPress={handleJoin}>
-                  <Text style={styles.buttonText}>Join</Text>
+              <View style={{ flex: 1, flexDirection:'column', justifyContent: 'space-evenly', alignItems:'center', padding:20,}}>
+                <TouchableOpacity onPress={() => {navigation.navigate('New Post'); closeModal();}} style={styles.newButton}>
+                  <Text style={{color:'#fff'}}>New Post</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => {navigation.navigate('New Post'); closeModal();}} style={styles.newButton}>
+                  <Text style={{color:'#fff'}}>New Event</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -119,18 +98,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#CCCCCC',
+    borderColor: 'black',
     borderRadius: 5,
     padding: 10,
     marginVertical: 10,
   },
-  joinButton: {
+  newButton: {
     backgroundColor: '#3867c7',
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
     alignItems: 'center',
-    height: 45,
+    height: '20%',
+    width: '80%',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -148,4 +128,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JoinFamModal;
+export default NewPostOrEventModal;

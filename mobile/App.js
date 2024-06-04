@@ -11,11 +11,15 @@ import { initReactI18next } from 'react-i18next';
 import i18n from 'i18next';
 import enTranslation from './translations/en.json';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 
 import AppContext from './AppContext';
 import MainNavScreen from './screens/MainNavScreen';
 import LoginScreen from './screens/LoginScreen';
 
+
+import globals from './globals';
 const gloStyles = require('./gloStyles'); //Global Styles
 if (!i18n.isInitialized) {
   i18n
@@ -34,15 +38,7 @@ if (!i18n.isInitialized) {
     });
 }
 
-//Use custom font later.
-// Text.defaultProps = {
-//   style: {
-//     fontFamily: 'Arial Rounded MT Bold',
-//   },
-// };
-
 const Stack = createNativeStackNavigator();
-
 
 function SplashScreen() {
   return (
@@ -57,25 +53,41 @@ function SplashScreen() {
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [ userToken, setUserToken ] = useState('');
+  const [ selectedBFam, setSelectedBFam ] = useState('');
+  const [ userID, setUserID ] = useState('');
 
 
-  const getUserData = () => {
-    setTimeout(() => {
-      // Simulating data retrieval after a delay of 2 seconds
-      setIsLoading(false); // Set isLoading to false after data retrieval
-    }, 2000); // Simulate a 2-second delay
+  const getUserInfo = async (userID) => {
+    try {
+      userID = userID.replaceAll('"','');
+      const response = await fetch(`${globals.apiUrl}getUserInfo?user=${userID}`);
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const userInfo = await response.json();  
+      await SecureStore.setItemAsync('userInfo', JSON.stringify(userInfo));
+      
+      setSelectedBFam(userInfo[0].bfamID);
+      setUserID(userInfo[0].userID);
+
+      return userInfo;
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      throw error;
+    }
   };
 
   const getUserToken = async () => {
     try {
       const token = await SecureStore.getItemAsync('userToken');
       if (token) {
-        console.log('Retrieved userToken:', token);
         setUserToken(token);
-        getUserData();
+        return getUserInfo(token); // Return the result of getUserInfo here
       } else {
         console.warn('Token not found.');
-        // setIsLoading(false);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Unknown error while getting userToken:', error);
@@ -85,14 +97,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    getUserToken().then((token) => {
-      if (token !== null) {
-        // If token exists, fetch user data
-        setIsLoading(true);
-        getUserData();
-      } else {
-        // If token doesn't exist, set isLoading to false and show login screen
-        setIsLoading(false);
+    getUserToken().then((userInfo) => {
+      if (userInfo !== null) {
+        // If userInfo exists, set selectedBFam
+        setSelectedBFam(userInfo[0].bfamID);
       }
     });
   }, []);
@@ -115,39 +123,40 @@ export default function App() {
   //END WARNING
 
   return (
-    <AppContext.Provider value={{ userToken, setUserToken }}>
-      <NavigationContainer>
-        {userToken !== null && userToken !== undefined && userToken !== '' ? (
-          <Stack.Navigator>
-            <Stack.Screen name="MainNavScreen" component={MainNavScreen} options={{ headerShown: false }} />
-          </Stack.Navigator>
-        ) : (
-          <Stack.Navigator>
-            <Stack.Screen name="LoginScreen" component={LoginScreen} 
-              options={{ 
-                title: 'Log in',
-                headerTitleStyle: {
-                  color: '#fff', 
-                },
-                headerStyle:{
-                  backgroundColor:'#3867c7',
-                },
-                headerShown:false,
-              }} 
-              
-            />
-          </Stack.Navigator>
-        )}
-      </NavigationContainer>
-      <StatusBar style='auto'/>
-    </AppContext.Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppContext.Provider value={{ userToken, setUserToken, selectedBFam, setSelectedBFam, userID, setUserID }}>
+        <NavigationContainer>
+          {userToken !== null && userToken !== undefined && userToken !== '' ? (
+            <Stack.Navigator>
+              <Stack.Screen name="MainNavScreen" component={MainNavScreen} options={{ headerShown: false }} />
+            </Stack.Navigator>
+          ) : (
+            <Stack.Navigator>
+              <Stack.Screen name="LoginScreen" component={LoginScreen} 
+                options={{ 
+                  title: 'Log in',
+                  headerTitleStyle: {
+                    color: '#fff', 
+                  },
+                  headerStyle:{
+                    backgroundColor:'#3867c7',
+                  },
+                  headerShown:false,
+                }} 
+                
+              />
+            </Stack.Navigator>
+          )}
+        </NavigationContainer>
+        <StatusBar style='light'/>
+      </AppContext.Provider>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },

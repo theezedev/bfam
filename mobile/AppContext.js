@@ -4,8 +4,11 @@ const AppContext = React.createContext({
   userToken: '',
   setUserToken: () => {},
 
-  selectedFam: '',
-  setSelectedFam: () => {},
+  selectedBFam: '',
+  setSelectedBFam: () => {},
+
+  userID: '',
+  setUserID: () => {},
 });
 
 export default AppContext;

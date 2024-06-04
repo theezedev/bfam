@@ -6,6 +6,10 @@ var app = express();
 var router = express.Router();
 var expressIp = require('express-ip'); // Import the express-ip middleware
 
+//for profpics
+var fs = require('fs');
+var path = require('path');
+
 
 app.use(expressIp().getIpInfoMiddleware); // Use express-ip middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,7 +18,7 @@ app.use(cors());
 app.use('/api', router);
 
 router.use((request, response, next) => {
-  logger.info('Request');
+  // logger.info('Request');
   const authHeader = request.headers['authentication'];
   // const authToken = '123'; 
   const authToken = '3856aed2-34ca-405b-9eb5-a7295b1b3291'; 
@@ -50,29 +54,108 @@ router.route('/').get((request, response) => {
   response.json({ Status: 'Up' });
 });
 
-router.route('/getFamilyMembers/:bfam').get((request, response) => {
-  Db.getFamilyMembers(request.params.bfam).then((data) => {
-    response.json(data[0]);
-  })
-})
+router.route('/getBFamMembers').get((request, response) => {
+  const bfamParam = request.query.bfam;
+  console.log(bfamParam);
+  if (!bfamParam) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
 
-// router.route('/getFamilyInfo').get((request, response) => {
-//   Db.getContacts().then((data) => {
-//     response.json(data);
-//   });
-// });
+  Db.getBFamMembers(bfamParam) // Use bfamParam as a parameter in your database operation
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
 
-// router.route('/permit').get((request, response) => {
-//   Db.getPermit(request.get('appID')).then((data) => {
-//     response.json(data);
-//   })
-// })
+router.route('/getFeed').get((request, response) => {
+  const bfamParam = request.query.bfam;
+  if (!bfamParam) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
+  Db.getFeed(bfamParam) // Use bfamParam as a parameter in your database operation
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
 
-// router.route('/getUserInfo').get((request, response) => {
-//   Db.getForms(request.get('appID')).then((data) => {
-//     response.json(data);
-//   });
-// });
+router.route('/getMyBFams').get((request, response) => {
+  const userID = request.query.user;
+  if (!userID) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
+  Db.getMyBFams(userID) // Use bfamParam as a parameter in your database operation
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
+
+router.route('/getUserInfo').get((request, response) => {
+  const userID = request.query.user;
+  if (!userID) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
+  Db.getUserInfo(userID) // Use bfamParam as a parameter in your database operation
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
+
+router.route('/getMemberInfo').get((request, response) => {
+  console.log(request.query.user);
+  const userID = request.query.user;
+  if (!userID) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
+  Db.getMemberInfo(userID)
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
+
+//POSTS
+
+router.route('/postNewBFam').post((request, response) => {
+  const { userID, bfamName, isDefault } = request.body;
+
+  if (!userID || !bfamName || isDefault === undefined) {
+    return response.status(400).json({ error: 'Missing parameters' });
+  }
+  Db.postNewBFam(userID, bfamName, isDefault)
+    .then((data) => {
+      // console.log(data);
+      response.json(data);
+    })
+    .catch((error) => {
+      console.error('Error in getFeed:', error);
+      response.status(500).json({ error: 'Internal server error' });
+    });
+});
+
 
 var port = process.env.PORT || 8090;
 app.listen(port);

@@ -9,6 +9,7 @@ import AppContext from '../AppContext';
 import JoinFamModal from '../modals/JoinFamModal';
 import CreateFamModal from '../modals/CreateFamModal';
 import ProfileModal from '../modals/ProfileModal';
+import AboutModal from '../modals/AboutModal';
 
 const gloStyles = require('../gloStyles'); //Global Styles
 
@@ -17,7 +18,8 @@ const settingsOptions = [
   { id: '1', title: 'My Profile', showModal: 'ProfileModal' },
   { id: '2', title: 'Join Fam', showModal: 'JoinFamModal' },
   { id: '3', title: 'Create Fam', showModal: 'CreateFamModal' },
-  { id: '4', title: 'My Fams', showModal: 'MyFamsModal' },
+  { id: '4', title: 'About', showModal: 'AboutModal' },
+  // { id: '5', title: 'My Fams', showModal: 'MyFamsModal' },
 
   // { id: '5', title: 'Join Fam', showModal: 'JoinFamModal' },e
   // { id: '6', title: 'Create Fam', showModal: 'CreateFamModal' },
@@ -104,6 +106,13 @@ const SettingsScreen = () => {
         onClose={handleCloseModal}
         onCreateFam={(famName) => {
           console.log('Family name:', famName);
+          handleCloseModal();
+        }}
+      />
+      <AboutModal
+        visible={selectedModal === 'AboutModal'}
+        onClose={handleCloseModal}
+        onCreateFam={(famName) => {
           handleCloseModal();
         }}
       />

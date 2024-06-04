@@ -1,44 +1,60 @@
-import React, { useState } from 'react';
-import { View, TextInput, FlatList, Image, Text, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, TextInput, FlatList, Image, Text, TouchableOpacity, StyleSheet, RefreshControl, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 
-const FamScreen = () => {
+
+import globals from '../globals';
+import AppContext from '../AppContext';
+
+const FamScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState([
-    { id: 1, name: 'John Doe', title: 'Parent', imageUrl: 'https://via.placeholder.com/150' },
-    { id: 2, name: 'Jane Doe', title: 'Child', imageUrl: 'https://via.placeholder.com/150' },
-    // Add more family members as needed
-  ]);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const { selectedBFam, setSelectedBFam } = useContext(AppContext);
+  const { userID, setUserID } = useContext(AppContext);
+
+  const fetchBFamMembers = async () => {
+    try {
+      // Make API call to fetch family members data
+      const response = await fetch(`${globals.apiUrl}getBFamMembers?bfam=${selectedBFam}`);
+      const data = await response.json();
+      // Update familyMembers state with the fetched data
+      setFamilyMembers(data);
+    } catch (error) {
+      console.error('Error fetching family members:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBFamMembers(); 
+  }, []);
 
   const filteredMembers = familyMembers.filter(
     member =>
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.title.toLowerCase().includes(searchQuery.toLowerCase())
+      member.userFirstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.userLastName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderMember = ({ item }) => (
-    <TouchableOpacity style={styles.memberContainer}>
-      <Image source={{ uri: item.imageUrl }} style={styles.profileImage} />
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.title}>{item.title}</Text>
-    </TouchableOpacity>
-  );
+  const renderMember = ({ item }) => {
+    // Check if the userID matches item.userID, and return null if they match
+    if (userID === item.userID) {
+      return null;
+    }
+  
+    return (
+      <TouchableOpacity style={styles.memberContainer} onPress={() => navigation.navigate('FamDetails', { memberId: item.userID })}>
+        <Image source={{ uri: `${globals.profPicURL}${item.userID}.jpg` }} style={styles.profileImage} />
+        <Text style={styles.name}>{`${item.userFirstName} ${item.userLastName}`}</Text>
+        <Text style={styles.title}>{item.bfamMemberRole}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   const onRefresh = () => {
-    // Simulate fetching updated data from an API or source
     setRefreshing(true);
-    // Example: Fetch updated data (replace with your data fetching logic)
-    setTimeout(() => {
-      // Example: Replace the existing data with updated data
-      setFamilyMembers([
-        { id: 1, name: 'John Doe', title: 'Parent', imageUrl: 'https://via.placeholder.com/150' },
-        { id: 2, name: 'Jane Doe', title: 'Child', imageUrl: 'https://via.placeholder.com/150' },
-        { id: 3, name: 'Alice Smith', title: 'Grandparent', imageUrl: 'https://via.placeholder.com/150' },
-        // Add more updated family members or replace with new data
-      ]);
-      setRefreshing(false);
-    }, 1500); // Simulate a delay for fetching data (you can adjust the delay time)
+    fetchBFamMembers();
+    setRefreshing(false);
   };
 
   return (
@@ -53,14 +69,12 @@ const FamScreen = () => {
             />
         </View>
         <FlatList
-            data={filteredMembers}
-            renderItem={renderMember}
-            keyExtractor={item => item.id.toString()}
-            numColumns={2} // You can adjust the number of columns as needed
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
+          data={filteredMembers}
+          renderItem={renderMember}
+          keyExtractor={item => item.bfamMemberID}
+          numColumns={2}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
     </View>
   );
@@ -80,13 +94,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems:'center',
     marginBottom:10,
+    backgroundColor:'#fff'
   },
   searchInput: {
     height: 40,
     borderColor: '#CCCCCC',
     borderWidth: 0,
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
+    flex:1,
   },
   listContainer: {
     justifyContent: 'space-between',
@@ -94,12 +110,26 @@ const styles = StyleSheet.create({
   memberContainer: {
     flex:2,
     aspectRatio: 1, // Aspect ratio for square shape
-    backgroundColor: '#E0E0E0', // Placeholder background color
+    backgroundColor: '#fff', // Placeholder background color
     borderRadius: 10,
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   profileImage: {
     width: 80,
@@ -110,6 +140,7 @@ const styles = StyleSheet.create({
   name: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#313131',
   },
   title: {
     fontSize: 14,
